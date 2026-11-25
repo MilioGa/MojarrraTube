@@ -15,7 +15,7 @@
     <Product>MojarraTube</Product>
     <Company>Mojarrium</Company>
     <Description>Videos de YouTube y de la web, descargas y reproductor propio</Description>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <ApplicationIcon>..\build\icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <NeutralLanguage>es</NeutralLanguage>

@@ -34,7 +34,9 @@ public sealed class Motor : Notificador, IDisposable
             "--avcodec-hw=any", "--audio-time-stretch", "--no-lua", "--http-reconnect");
     }
 
-    readonly MediaPlayer _mp;
+    // libVLC se crea en segundo plano: si tarda o falla, la ventana igual aparece
+    readonly Lazy<MediaPlayer> _lazy;
+    MediaPlayer _mp => _lazy.Value;
     readonly Dispatcher _ui;
     Media? _media;
     readonly DispatcherTimer _reloj;
@@ -57,8 +59,25 @@ public sealed class Motor : Notificador, IDisposable
     public Motor()
     {
         _ui = Application.Current.Dispatcher;
-        _mp = new MediaPlayer(Vlc) { EnableHardwareDecoding = true, EnableKeyInput = false, EnableMouseInput = false };
         _cbFormato = Formato; _cbLimpiar = Limpiar; _cbBloquear = Bloquear; _cbMostrar = Mostrar;
+        _lazy = new Lazy<MediaPlayer>(CrearReproductor, LazyThreadSafetyMode.ExecutionAndPublication);
+
+        _reloj = new DispatcherTimer(DispatcherPriority.Render, _ui) { Interval = TimeSpan.FromMilliseconds(200) };
+        _reloj.Tick += (_, _) =>
+        {
+            if (_buscando || !_lazy.IsValueCreated) return;
+            var t = _mp.Time;
+            if (t >= 0) { _posicion = t / 1000.0; Avisar(nameof(Posicion)); }
+        };
+        _reloj.Start();
+
+        // Prepara libVLC mientras el usuario navega, así el primer video arranca rápido
+        Task.Run(() => { try { _ = _lazy.Value; } catch (Exception e) { Marca.Registrar(e); } });
+    }
+
+    MediaPlayer CrearReproductor()
+    {
+        var _mp = new MediaPlayer(Vlc) { EnableHardwareDecoding = true, EnableKeyInput = false, EnableMouseInput = false };
         _mp.SetVideoFormatCallbacks(_cbFormato, _cbLimpiar);
         _mp.SetVideoCallbacks(_cbBloquear, null, _cbMostrar);
 
@@ -76,15 +95,7 @@ public sealed class Motor : Notificador, IDisposable
         _mp.LengthChanged += (_, _) => EnUi(ActualizarDuracion);
         _mp.ESAdded += (_, _) => EnUi(() => Avisar(nameof(Subtitulos)));
         _mp.Vout += (_, e) => EnUi(() => TieneVideo = e.Count > 0);
-
-        _reloj = new DispatcherTimer(DispatcherPriority.Render, _ui) { Interval = TimeSpan.FromMilliseconds(200) };
-        _reloj.Tick += (_, _) =>
-        {
-            if (_buscando) return;
-            var t = _mp.Time;
-            if (t >= 0) { _posicion = t / 1000.0; Avisar(nameof(Posicion)); }
-        };
-        _reloj.Start();
+        return _mp;
     }
 
     void EnUi(Action a) => _ui.BeginInvoke(a);
@@ -118,11 +129,12 @@ public sealed class Motor : Notificador, IDisposable
 
     void ActualizarDuracion()
     {
+        if (!_lazy.IsValueCreated) return;
         var l = _mp.Length;
         if (l > 0) Duracion = l / 1000.0;
         Avisar(nameof(PuedeBuscar));
     }
-    public bool PuedeBuscar => _mp.IsSeekable || _duracion > 0;
+    public bool PuedeBuscar => (_lazy.IsValueCreated && _mp.IsSeekable) || _duracion > 0;
 
     // ───────────── Abrir ─────────────
     /// <summary>Reproduce una URL o un archivo. <paramref name="audio"/>: pista de audio aparte (YouTube separa video y audio).</summary>
@@ -133,9 +145,9 @@ public sealed class Motor : Notificador, IDisposable
         Error = null;
         TieneVideo = false;
         Duracion = 0; _posicion = inicio; Avisar(nameof(Posicion));
-        var vlc = Vlc;
         EnSegundoPlano(() =>
         {
+            var vlc = Vlc;
             var anterior = _media;
             Media m = File.Exists(fuente) ? new Media(vlc, fuente, FromType.FromPath) : new Media(vlc, new Uri(fuente));
             if (!string.IsNullOrEmpty(audio)) m.AddOption(":input-slave=" + audio);
@@ -222,18 +234,18 @@ public sealed class Motor : Notificador, IDisposable
     public double Velocidad
     {
         get => _velocidad;
-        set { value = Math.Clamp(value, 0.25, 3); if (Poner(ref _velocidad, value)) { var r = (float)value; Task.Run(() => _mp.SetRate(r)); } }
+        set { value = Math.Clamp(value, 0.25, 3); if (Poner(ref _velocidad, value)) { var r = (float)value; Task.Run(() => { try { _mp.SetRate(r); } catch { } }); } }
     }
 
     public List<PistaMedio> Subtitulos =>
-        _mp.SpuDescription.Select(d => new PistaMedio(d.Id, d.Id < 0 ? "Desactivados" : d.Name)).ToList();
-    public int SubtituloActual => _mp.Spu;
+        !_lazy.IsValueCreated ? new List<PistaMedio>() : _mp.SpuDescription.Select(d => new PistaMedio(d.Id, d.Id < 0 ? "Desactivados" : d.Name)).ToList();
+    public int SubtituloActual => _lazy.IsValueCreated ? _mp.Spu : -1;
     public void ElegirSubtitulo(int id) => Task.Run(() => _mp.SetSpu(id));
     public void AgregarSubtitulo(string ruta) => Task.Run(() => _mp.AddSlave(MediaSlaveType.Subtitle, new Uri(ruta).AbsoluteUri, true));
 
     public List<PistaMedio> PistasAudio =>
-        _mp.AudioTrackDescription.Where(d => d.Id >= 0).Select(d => new PistaMedio(d.Id, d.Name)).ToList();
-    public int AudioActual => _mp.AudioTrack;
+        !_lazy.IsValueCreated ? new List<PistaMedio>() : _mp.AudioTrackDescription.Where(d => d.Id >= 0).Select(d => new PistaMedio(d.Id, d.Name)).ToList();
+    public int AudioActual => _lazy.IsValueCreated ? _mp.AudioTrack : -1;
     public void ElegirAudio(int id) => Task.Run(() => _mp.SetAudioTrack(id));
 
     /// <summary>Guarda el fotograma actual como PNG.</summary>
@@ -320,6 +332,7 @@ public sealed class Motor : Notificador, IDisposable
     public void Dispose()
     {
         _reloj.Stop();
+        if (!_lazy.IsValueCreated) return;
         try { _mp.Stop(); } catch { }
         _mp.Dispose();
         _media?.Dispose();

@@ -19,13 +19,24 @@ public static class Marca
     {
         DirDatos = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), Nombre);
         DirLocal = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Nombre);
-        Directory.CreateDirectory(DirDatos);
+        Directory.CreateDirectory(DirLocal);
+        try { Directory.CreateDirectory(DirDatos); }
+        catch (Exception e) { Registrar(e); DirDatos = Path.Combine(DirLocal, "datos"); Directory.CreateDirectory(DirDatos); }
         Directory.CreateDirectory(DirComponentes);
         Directory.CreateDirectory(DirCache);
     }
 
+    /// <summary>%LOCALAPPDATA%\MojarraTube\errores.log (siempre existe, aunque Documentos esté en OneDrive o falle).</summary>
+    public static string ArchivoErrores => Path.Combine(DirLocal.Length > 0 ? DirLocal
+        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Nombre), "errores.log");
+
     public static void Registrar(object? e)
     {
-        try { File.AppendAllText(Path.Combine(DirDatos, "errores.log"), $"[{DateTime.Now:s}] {e}\n"); } catch { }
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(ArchivoErrores)!);
+            File.AppendAllText(ArchivoErrores, $"[{DateTime.Now:s}] v{Version} {e}\n");
+        }
+        catch { }
     }
 }
