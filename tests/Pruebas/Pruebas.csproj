@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>MojarraTube</RootNamespace>
+    <NoWarn>$(NoWarn);CS4014</NoWarn>
+  </PropertyGroup>
+  <!-- Solo la lógica sin interfaz: se prueba en cualquier sistema -->
+  <ItemGroup>
+    <Compile Include="..\..\src\Texto.cs" Link="App\Texto.cs" />
+    <Compile Include="..\..\src\Modelos.cs" Link="App\Modelos.cs" />
+    <Compile Include="..\..\src\Marca.cs" Link="App\Marca.cs" />
+    <Compile Include="..\..\src\Datos.cs" Link="App\Datos.cs" />
+    <Compile Include="..\..\src\Servicios\YtDlpDatos.cs" Link="App\YtDlpDatos.cs" />
+    <Compile Include="..\..\src\Servicios\YtDlp.cs" Link="App\YtDlp.cs" />
+    <Compile Include="..\..\src\Servicios\Herramientas.cs" Link="App\Herramientas.cs" />
+    <Compile Include="..\..\src\Servicios\Proceso.cs" Link="App\Proceso.cs" />
+    <Compile Include="..\..\src\Servicios\Red.cs" Link="App\Red.cs" />
+  </ItemGroup>
+</Project>

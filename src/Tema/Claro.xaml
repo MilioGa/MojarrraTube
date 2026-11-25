@@ -1,0 +1,28 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Tema claro -->
+  <Color x:Key="cFondo">#F6F7FA</Color>
+  <Color x:Key="cAcento">#E62E50</Color>
+  <Color x:Key="cSombra">#5A6070</Color>
+  <SolidColorBrush x:Key="Fondo" Color="#F6F7FA"/>
+  <SolidColorBrush x:Key="Superficie" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Superficie2" Color="#EEF0F4"/>
+  <SolidColorBrush x:Key="Superficie3" Color="#E2E5EC"/>
+  <SolidColorBrush x:Key="Hover" Color="#0F000000"/>
+  <SolidColorBrush x:Key="Presionado" Color="#1C000000"/>
+  <SolidColorBrush x:Key="Linea" Color="#DDE1E8"/>
+  <SolidColorBrush x:Key="LineaFuerte" Color="#C5CAD4"/>
+  <SolidColorBrush x:Key="Texto" Color="#14161C"/>
+  <SolidColorBrush x:Key="Tenue" Color="#5B6273"/>
+  <SolidColorBrush x:Key="MuyTenue" Color="#858C9C"/>
+  <SolidColorBrush x:Key="Acento" Color="#E62E50"/>
+  <SolidColorBrush x:Key="AcentoHover" Color="#F0435F"/>
+  <SolidColorBrush x:Key="AcentoSuave" Color="#1FE62E50"/>
+  <SolidColorBrush x:Key="AcentoTexto" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Violeta" Color="#5B4AE0"/>
+  <SolidColorBrush x:Key="Ok" Color="#16A34A"/>
+  <SolidColorBrush x:Key="Aviso" Color="#C98A0B"/>
+  <SolidColorBrush x:Key="Peligro" Color="#DC2626"/>
+  <SolidColorBrush x:Key="Esqueleto" Color="#E6E8EE"/>
+  <SolidColorBrush x:Key="Velo" Color="#8C0B0D12"/>
+</ResourceDictionary>

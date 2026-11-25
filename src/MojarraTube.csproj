@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+    <StartupObject>MojarraTube.Program</StartupObject>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>MojarraTube</RootNamespace>
+    <AssemblyName>MojarraTube</AssemblyName>
+    <Product>MojarraTube</Product>
+    <Company>Mojarrium</Company>
+    <Description>Videos de YouTube y de la web, descargas y reproductor propio</Description>
+    <Version>0.1.0</Version>
+    <ApplicationIcon>..\build\icon.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <NeutralLanguage>es</NeutralLanguage>
+    <SatelliteResourceLanguages>es</SatelliteResourceLanguages>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <DebugType>embedded</DebugType>
+    <AllowedReferenceRelatedFileExtensions>none</AllowedReferenceRelatedFileExtensions>
+    <PublishDocumentationFiles>false</PublishDocumentationFiles>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="LibVLCSharp" Version="3.10.2" />
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.24" />
+  </ItemGroup>
+  <!-- Solo VLC de 64 bits y solo los módulos que usa el reproductor (instalador más ligero) -->
+  <PropertyGroup>
+    <VlcWindowsX86Enabled>false</VlcWindowsX86Enabled>
+    <VlcWindowsArm64Enabled>false</VlcWindowsArm64Enabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <VlcWindowsX64IncludeFiles Include="libvlc.%2A;libvlccore.%2A;plugins\%2A%2A" />
+    <VlcWindowsX64ExcludeFiles Include="plugins\lua\%2A%2A;plugins\services_discovery\%2A%2A;plugins\stream_out\%2A%2A;plugins\access_output\%2A%2A;plugins\visualization\%2A%2A;plugins\video_splitter\%2A%2A;plugins\keystore\%2A%2A;plugins\gui\%2A%2A;plugins\control\%2A%2A;plugins\mux\%2A%2A" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="..\build\icon.png" Link="icon.png" />
+  </ItemGroup>
+</Project>

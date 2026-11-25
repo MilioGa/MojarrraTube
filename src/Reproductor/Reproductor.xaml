@@ -1,0 +1,110 @@
+<UserControl x:Class="MojarraTube.Reproductor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:MojarraTube"
+             Background="Black" Focusable="True" FocusVisualStyle="{x:Null}" ClipToBounds="True"
+             AutomationProperties.Name="Reproductor de video">
+  <Grid x:Name="Raiz" Background="Black">
+    <!-- Portada difuminada (audio o mientras carga) -->
+    <Image x:Name="Fondo" Stretch="UniformToFill" Opacity="0.35" local:Img.Ancho="320">
+      <Image.Effect><BlurEffect Radius="40" RenderingBias="Performance"/></Image.Effect>
+    </Image>
+    <Image x:Name="Portada" Stretch="Uniform" local:Img.Ancho="1280" Margin="0"/>
+    <!-- Video -->
+    <Image x:Name="Lienzo" Stretch="Uniform" RenderOptions.BitmapScalingMode="Linear"/>
+
+    <!-- Indicador de carga -->
+    <Grid x:Name="Carga" Width="64" Height="64" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" IsHitTestVisible="False">
+      <Ellipse Stroke="#33FFFFFF" StrokeThickness="5"/>
+      <Path Stroke="White" StrokeThickness="5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M 32,2.5 A 29.5,29.5 0 0 1 61.5,32" RenderTransformOrigin="0.5,0.5">
+        <Path.RenderTransform><RotateTransform x:Name="Giro"/></Path.RenderTransform>
+      </Path>
+    </Grid>
+
+    <!-- Destello de play/pausa y avisos de salto -->
+    <Border x:Name="Destello" Width="76" Height="76" CornerRadius="38" Background="#99000000" Opacity="0" IsHitTestVisible="False" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+      <Border.RenderTransform><ScaleTransform x:Name="DestelloEscala"/></Border.RenderTransform>
+      <TextBlock x:Name="DestelloIcono" FontFamily="{StaticResource Iconos}" FontSize="30" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </Border>
+    <Border x:Name="Aviso" CornerRadius="10" Background="#B3000000" Padding="14,8" Opacity="0" IsHitTestVisible="False" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,28,0,0">
+      <TextBlock x:Name="AvisoTexto" Foreground="White" FontSize="15" FontWeight="SemiBold"/>
+    </Border>
+
+    <!-- Error -->
+    <Border x:Name="PanelError" Background="#E6101216" Visibility="Collapsed">
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="460" Margin="24">
+        <TextBlock Text="&#xE7BA;" FontFamily="{StaticResource Iconos}" FontSize="34" Foreground="#F5B83D" HorizontalAlignment="Center"/>
+        <TextBlock x:Name="ErrorTexto" Foreground="White" FontSize="15" TextWrapping="Wrap" TextAlignment="Center" Margin="0,12,0,16"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+          <Button x:Name="BtnReintentar" Style="{StaticResource BtnPrimario}" Click="Reintentar_Click">
+            <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE72C;" FontFamily="{StaticResource Iconos}" VerticalAlignment="Center" Margin="0,0,8,0"/><TextBlock Text="Reintentar"/></StackPanel>
+          </Button>
+          <Button x:Name="BtnNavegadorError" Style="{StaticResource BtnFantasma}" Foreground="White" Margin="10,0,0,0" Click="Navegador_Click" Content="Abrir en el navegador"/>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Controles -->
+    <Grid x:Name="Controles" Opacity="1">
+      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+      <!-- Arriba: título (pantalla completa y mini) -->
+      <Border x:Name="Arriba" Padding="18,14,10,40" Visibility="Collapsed">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#B0000000" Offset="0"/><GradientStop Color="#00000000" Offset="1"/></LinearGradientBrush>
+        </Border.Background>
+        <Grid>
+          <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+          <TextBlock x:Name="TituloArriba" Foreground="White" FontSize="17" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+          <StackPanel x:Name="BotonesMini" Grid.Column="1" Orientation="Horizontal" Visibility="Collapsed">
+            <Button Style="{StaticResource BtnVideo}" Content="&#xE740;" ToolTip="Ampliar (I)" Click="Ampliar_Click" AutomationProperties.Name="Ampliar"/>
+            <Button Style="{StaticResource BtnVideo}" Content="&#xE711;" ToolTip="Cerrar" Click="CerrarMini_Click" AutomationProperties.Name="Cerrar reproductor"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+      <!-- Centro (mini): play grande -->
+      <Button x:Name="CentroMini" Grid.Row="1" Style="{StaticResource BtnVideo}" Width="56" Height="56" FontSize="26" Visibility="Collapsed" Click="Alternar_Click" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      <!-- Abajo -->
+      <Border x:Name="Abajo" Grid.Row="2" Padding="14,36,14,8">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#00000000" Offset="0"/><GradientStop Color="#C8000000" Offset="1"/></LinearGradientBrush>
+        </Border.Background>
+        <StackPanel>
+          <local:BarraTiempo x:Name="Barra" Margin="2,0,2,2"/>
+          <Grid x:Name="FilaBotones">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal">
+              <Button x:Name="BtnAnterior" Style="{StaticResource BtnVideo}" Content="&#xE892;" ToolTip="Anterior (Mayús+P)" Click="Anterior_Click" Visibility="Collapsed" AutomationProperties.Name="Anterior"/>
+              <Button x:Name="BtnPlay" Style="{StaticResource BtnVideo}" Content="&#xE768;" FontSize="20" ToolTip="Reproducir (K)" Click="Alternar_Click" AutomationProperties.Name="Reproducir o pausar"/>
+              <Button x:Name="BtnSiguiente" Style="{StaticResource BtnVideo}" Content="&#xE893;" ToolTip="Siguiente (Mayús+N)" Click="Siguiente_Click" Visibility="Collapsed" AutomationProperties.Name="Siguiente"/>
+              <Grid x:Name="ZonaVolumen" Background="Transparent" MouseEnter="Volumen_Enter" MouseLeave="Volumen_Leave">
+                <StackPanel Orientation="Horizontal">
+                  <Button x:Name="BtnVolumen" Style="{StaticResource BtnVideo}" Content="&#xE767;" ToolTip="Silenciar (M)" Click="Silencio_Click" AutomationProperties.Name="Silenciar"/>
+                  <Slider x:Name="Vol" Style="{StaticResource SliderVideo}" Width="0" Minimum="0" Maximum="100" VerticalAlignment="Center" Margin="2,0,8,0" ValueChanged="Vol_ValueChanged" AutomationProperties.Name="Volumen"/>
+                </StackPanel>
+              </Grid>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+              <TextBlock x:Name="TiempoTexto" Foreground="White" FontSize="13" VerticalAlignment="Center" Text="0:00"/>
+              <TextBlock x:Name="CapituloTexto" Foreground="#D0FFFFFF" FontSize="13" VerticalAlignment="Center" Margin="12,0,0,0" TextTrimming="CharacterEllipsis" MaxWidth="260"/>
+            </StackPanel>
+            <StackPanel Grid.Column="3" Orientation="Horizontal">
+              <Button x:Name="BtnSubtitulos" Style="{StaticResource BtnVideo}" Content="&#xE7F0;" ToolTip="Subtítulos (C)" Click="Subtitulos_Click" Visibility="Collapsed" AutomationProperties.Name="Subtítulos"/>
+              <Button x:Name="BtnAjustes" Style="{StaticResource BtnVideo}" ToolTip="Calidad y velocidad" Click="Ajustes_Click" AutomationProperties.Name="Calidad y velocidad">
+                <Grid>
+                  <TextBlock Text="&#xE713;" FontFamily="{StaticResource Iconos}" FontSize="17"/>
+                  <Border x:Name="EtiquetaCalidad" Background="{DynamicResource Acento}" CornerRadius="3" Padding="3,0" Margin="10,-14,-14,0" HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="Collapsed">
+                    <TextBlock x:Name="EtiquetaCalidadTexto" FontFamily="{StaticResource Letra}" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                  </Border>
+                </Grid>
+              </Button>
+              <Button x:Name="BtnMini" Style="{StaticResource BtnVideo}" Content="&#xE8A7;" ToolTip="Minirreproductor (I)" Click="Mini_Click" AutomationProperties.Name="Minirreproductor"/>
+              <Button x:Name="BtnCompleta" Style="{StaticResource BtnVideo}" Content="&#xE740;" ToolTip="Pantalla completa (F)" Click="Completa_Click" AutomationProperties.Name="Pantalla completa"/>
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>
